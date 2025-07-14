@@ -1,6 +1,8 @@
 baseurl: '/'
 permalink: pretty
-title: 'Jekyll Serif'
+title: 'Try On Fabric'
+description: "Try on your fabric before you buy them"
+url: "https://tryonfabric.com"
 
 logo:
   mobile: "images/logo/logo-mobile.svg"
