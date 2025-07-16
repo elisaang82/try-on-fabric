@@ -2,45 +2,71 @@
 layout: none
 permalink: /camera/
 ---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera with Overlay</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-  }
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
 
-  #cameraContainer {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: black;
-    touch-action: none;
-  }
+    #cameraContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: black;
+      touch-action: none;
+    }
 
-  #videoElement {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+    #videoElement {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
-  #overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background-image: url('images/overlay.png');
-    background-size: cover; /* changed from contain */
-    background-repeat: no-repeat;
-    background-position: center;
-  }
-</style>
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background-image: url('images/overlay.png');
+      background-size: cover; /* changed from contain */
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+  </style>
+
+</head>
+<body>
+  <div id="cameraContainer">
+    <video id="videoElement" autoplay playsinline></video>
+    <div id="overlay"></div>
+  </div>
+
+  <script>
+    const video = document.getElementById('videoElement');
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("Error accessing camera: ", err);
+      });
+  </script>
+</body>
+</html>
