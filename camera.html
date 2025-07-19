@@ -31,12 +31,11 @@ title: Camera Overlay
       position: absolute;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: contain;
-      pointer-events: none;
+      width: 100vw;         /* Fit full screen width */
+      height: auto;         /* Adjust height proportionally */
+      object-fit: contain;  /* Preserve aspect ratio */
+      pointer-events: none; /* Let clicks go to camera below */
       z-index: 2;
-      display: none; /* Initially hidden */
     }
 
     .message-box {
