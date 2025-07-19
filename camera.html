@@ -1,72 +1,99 @@
 ---
-layout: none
-permalink: /camera/
+layout: default
+title: Camera Overlay
 ---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Camera with Overlay</title>
-
-
+  <title>{{ page.title }}</title>
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
       overflow: hidden;
-      width: 100%;
-      height: 100%;
+      background-color: #000;
     }
 
-    #cameraContainer {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background: black;
-      touch-action: none;
-    }
-
-    #videoElement {
+    #video {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       object-fit: cover;
+      z-index: 1;
+      display: none; /* Initially hidden */
     }
 
     #overlay {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
       pointer-events: none;
-      background-image: url('/images/overlay.png');
-      background-size: cover; /* changed from contain */
-      background-repeat: no-repeat;
-      background-position: center;
+      z-index: 2;
+      display: none; /* Initially hidden */
+    }
+
+    .message-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-family: sans-serif;
+      font-size: 1.2rem;
+      text-align: center;
+      z-index: 3;
     }
   </style>
-
 </head>
 <body>
-  <div id="cameraContainer">
-    <video id="videoElement" autoplay playsinline></video>
-    <div id="overlay"></div>
-  </div>
+
+  <video id="video" autoplay muted playsinline></video>
+  <img id="overlay" alt="Overlay Image" />
+  <div class="message-box" id="message">Checking device...</div>
 
   <script>
-    const video = document.getElementById('videoElement');
+    function isMobileDevice() {
+      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        console.error("Error accessing camera: ", err);
-      });
+    if (isMobileDevice()) {
+      // Hide message box
+      document.getElementById('message').style.display = 'none';
+
+      // Show video and overlay elements
+      document.getElementById('video').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
+
+      // Get overlay image from query string
+      const params = new URLSearchParams(window.location.search);
+      const overlayPath = params.get('overlay');
+      if (overlayPath) {
+        document.getElementById('overlay').src = overlayPath;
+      }
+
+      // Activate camera
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => {
+          const video = document.getElementById('video');
+          video.srcObject = stream;
+        })
+        .catch(err => {
+          console.error('Camera access failed:', err);
+          document.getElementById('message').innerText = "Unable to access camera.\nPlease check permissions or try another device.";
+          document.getElementById('message').style.display = 'block';
+        });
+    } else {
+      // Display desktop fallback message
+      document.getElementById('message').innerText = "⚠️ You need to visit this page on your mobile device.";
+    }
   </script>
+
 </body>
 </html>

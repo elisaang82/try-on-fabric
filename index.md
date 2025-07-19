@@ -10,4 +10,3 @@ show_call_box: true
 
 # See Your Fabric Come to Life Before You Buy!
 
-[Try it on your phone camera!](/camera/)

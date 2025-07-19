@@ -1,0 +1,30 @@
+.thumbnail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 16px;
+  padding: 10px;
+  justify-items: center;
+}
+
+.thumb-wrapper {
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.thumb-wrapper:hover {
+  transform: scale(1.05);
+}
+
+.thumb {
+  //max-width: 400px;
+  max-height: 200px;
+  //height: auto;
+  border-radius: 8px;
+  //box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.thumb-label {
+  font-size: 0.8rem;
+  margin-top: 6px;
+  color: #333;
+}

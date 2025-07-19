@@ -21,6 +21,8 @@ collections:
     sort_by: weight
   team:
     output: true
+  clothes:
+    output: true
 
 defaults:
   - scope:

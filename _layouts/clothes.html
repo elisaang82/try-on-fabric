@@ -1,0 +1,12 @@
+---
+layout: default
+bodyClass: "page-clothes"
+---
+
+<div class="thumbnail-row">
+  {% for item in site.clothes %}
+    <a href="{{ item.url }}">
+      <img src="{{ item.thumbnail }}" alt="{{ item.title }}" class="thumb">
+    </a>
+  {% endfor %}
+</div>
