@@ -26,7 +26,6 @@ bodyClass: "page-home"
           <a href="/camera{% if item.overlay %}?overlay={{ item.overlay | url_encode }}{% endif %}"
             class="thumb-wrapper">
             <img src="{{ item.thumbnail }}" alt="{{ item.title }}" class="thumb">
-            <p class="thumb-label">{{ item.title }}</p>
           </a>
           {% endfor %}
         </div>
