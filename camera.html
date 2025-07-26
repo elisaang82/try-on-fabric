@@ -97,12 +97,8 @@ title: Camera Overlay
     const overlayPath = params.get('overlay');
     if (overlayPath) overlay.src = overlayPath;
 
-    const aspectRatio = video.videoWidth / video.videoHeight;
-    const width = window.innerWidth;
-    const height = width / aspectRatio;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = video.clientWidth;
+    canvas.height = video.clientHeight;
 
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -158,14 +154,12 @@ title: Camera Overlay
     }
 
     captureBtn.addEventListener('click', () => {
-      const width = video.videoWidth;
-      const height = video.videoHeight;
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = video.clientWidth;
+      canvas.height = video.clientHeight;
 
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, width, height);
-      ctx.drawImage(overlay, 0, 0, width, height);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(blob => {
         const link = document.createElement('a');
