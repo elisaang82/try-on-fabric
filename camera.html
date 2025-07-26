@@ -14,28 +14,40 @@ title: Camera Overlay
       margin: 0;
       overflow: hidden;
       background-color: #000;
+      position: relative;
     }
 
-    #video {
+    #video, #overlay {
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
-      height: 100vh;
-      object-fit: cover;
+      height: auto;
+      object-fit: contain;
       z-index: 1;
-      display: none; /* Initially hidden */
     }
 
     #overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;         /* Fit full screen width */
-      height: auto;         /* Adjust height proportionally */
-      object-fit: contain;  /* Preserve aspect ratio */
-      pointer-events: none; /* Let clicks go to camera below */
+      object-fit: contain;
+      pointer-events: none;
       z-index: 2;
+    }
+
+    #capture-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      padding: 0.8rem 1.2rem;
+      font-size: 1rem;
+      background-color: #f48fb1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
     .message-box {
@@ -47,7 +59,17 @@ title: Camera Overlay
       font-family: sans-serif;
       font-size: 1.2rem;
       text-align: center;
+      z-index: 4;
+    }
+
+    #zoom-slider {
+      position: absolute;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 3;
+      width: 80vw;
+      accent-color: #f48fb1;
     }
   </style>
 </head>
@@ -55,6 +77,8 @@ title: Camera Overlay
 
   <video id="video" autoplay muted playsinline></video>
   <img id="overlay" alt="Overlay Image" />
+  <button id="capture-btn">📷 Capture</button>
+  <input type="range" id="zoom-slider" style="display: none;" />
   <div class="message-box" id="message">Checking device...</div>
 
   <script>
@@ -63,34 +87,73 @@ title: Camera Overlay
     }
 
     if (isMobileDevice()) {
-      // Hide message box
       document.getElementById('message').style.display = 'none';
 
-      // Show video and overlay elements
-      document.getElementById('video').style.display = 'block';
-      document.getElementById('overlay').style.display = 'block';
+      const video = document.getElementById('video');
+      const overlay = document.getElementById('overlay');
+      const captureBtn = document.getElementById('capture-btn');
+      const zoomSlider = document.getElementById('zoom-slider');
 
-      // Get overlay image from query string
+      video.style.display = 'block';
+      overlay.style.display = 'block';
+
+      // Overlay source from URL parameter
       const params = new URLSearchParams(window.location.search);
       const overlayPath = params.get('overlay');
-      if (overlayPath) {
-        document.getElementById('overlay').src = overlayPath;
-      }
+      if (overlayPath) overlay.src = overlayPath;
 
-      // Activate camera
       navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
         .then(stream => {
-          const video = document.getElementById('video');
           video.srcObject = stream;
+
+          const [track] = stream.getVideoTracks();
+          const capabilities = track.getCapabilities();
+          const settings = track.getSettings();
+
+          if (capabilities.zoom) {
+            zoomSlider.style.display = 'block';
+            zoomSlider.min = capabilities.zoom.min;
+            zoomSlider.max = capabilities.zoom.max;
+            zoomSlider.step = capabilities.zoom.step || 0.1;
+            zoomSlider.value = settings.zoom || capabilities.zoom.min;
+
+            zoomSlider.addEventListener('input', () => {
+              track.applyConstraints({ advanced: [{ zoom: parseFloat(zoomSlider.value) }] });
+            });
+          }
         })
         .catch(err => {
           console.error('Camera access failed:', err);
           document.getElementById('message').innerText = "Unable to access camera.\nPlease check permissions or try another device.";
           document.getElementById('message').style.display = 'block';
         });
+
+      captureBtn.addEventListener('click', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        if (overlay.src) {
+          const overlayImg = new Image();
+          overlayImg.src = overlay.src;
+          overlayImg.onload = () => {
+            ctx.drawImage(overlayImg, 0, 0, canvas.width, canvas.height);
+
+            const link = document.createElement('a');
+            link.download = 'tryon-photo.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+          };
+        }
+      });
+
     } else {
-      // Display desktop fallback message
-      document.getElementById('message').innerText = "⚠️ You need to visit this page on your mobile device.";
+      document.getElementById('message').innerText = "⚠️ Please use a mobile device to access this feature.";
+      document.getElementById('capture-btn').style.display = 'none';
+      document.getElementById('zoom-slider').style.display = 'none';
     }
   </script>
 
