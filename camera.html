@@ -4,10 +4,11 @@ title: Camera Overlay
 ---
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Try On Fabric - Camera</title>
+  <title>{{ page.title }}</title>
   <style>
     body {
       margin: 0;
@@ -39,7 +40,8 @@ title: Camera Overlay
       z-index: 10;
     }
 
-    .controls, .capture-button {
+    .controls,
+    .capture-button {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
@@ -61,7 +63,7 @@ title: Camera Overlay
       padding: 12px 20px;
       font-size: 1rem;
       border-radius: 50px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
       cursor: pointer;
     }
 
@@ -70,10 +72,11 @@ title: Camera Overlay
     }
   </style>
 </head>
+
 <body>
   <div class="camera-wrapper">
     <video id="video" autoplay playsinline></video>
-    <img id="overlay" src="overlay.png" alt="camera overlay">
+    <img id="overlay" alt="camera overlay">
     <input type="range" id="zoomSlider" class="controls" min="1" max="3" step="0.1" value="1">
     <button id="captureBtn" class="capture-button">📷 Save Look</button>
     <canvas id="canvas"></canvas>
@@ -89,6 +92,10 @@ title: Camera Overlay
     let stream, track, capabilities;
     let initialDistance = null;
     let lastZoom = null;
+
+    const params = new URLSearchParams(window.location.search);
+    const overlayPath = params.get('overlay');
+    if (overlayPath) overlay.src = overlayPath;
 
     async function setupCamera() {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -126,7 +133,7 @@ title: Camera Overlay
         const delta = currentDistance - initialDistance;
         const zoomChange = delta / 100;
         let newZoom = Math.max(capabilities.zoom.min,
-                      Math.min(capabilities.zoom.max, lastZoom + zoomChange));
+          Math.min(capabilities.zoom.max, lastZoom + zoomChange));
         track.applyConstraints({ advanced: [{ zoom: newZoom }] });
         zoomSlider.value = newZoom;
       }
@@ -161,4 +168,5 @@ title: Camera Overlay
     setupCamera();
   </script>
 </body>
+
 </html>
