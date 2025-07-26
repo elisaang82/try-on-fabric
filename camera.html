@@ -32,7 +32,7 @@ title: Camera Overlay
 
     #overlay {
       position: absolute;
-      top: -10;
+      top: -10px;
       left: 0;
       width: 100%;
       height: 100%;
@@ -96,6 +96,18 @@ title: Camera Overlay
     const params = new URLSearchParams(window.location.search);
     const overlayPath = params.get('overlay');
     if (overlayPath) overlay.src = overlayPath;
+
+    const aspectRatio = video.videoWidth / video.videoHeight;
+    const width = window.innerWidth;
+    const height = width / aspectRatio;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
+
 
     async function setupCamera() {
       stream = await navigator.mediaDevices.getUserMedia({
