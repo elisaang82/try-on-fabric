@@ -6,15 +6,16 @@ title: Camera Overlay
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ page.title }}</title>
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
       overflow: hidden;
       background-color: #000;
-      position: relative;
+      height: 100%;
     }
 
     #video, #overlay {
@@ -23,12 +24,11 @@ title: Camera Overlay
       left: 0;
       width: 100vw;
       height: 100vh;
-      object-fit: cover;
+      object-fit: contain;
       z-index: 1;
     }
 
     #overlay {
-      object-fit: contain;
       pointer-events: none;
       z-index: 2;
     }
@@ -50,18 +50,6 @@ title: Camera Overlay
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
-    .message-box {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #fff;
-      font-family: sans-serif;
-      font-size: 1.2rem;
-      text-align: center;
-      z-index: 4;
-    }
-
     #zoom-slider {
       position: absolute;
       bottom: 70px;
@@ -70,15 +58,28 @@ title: Camera Overlay
       z-index: 3;
       width: 80vw;
       accent-color: #f48fb1;
+      display: none;
+    }
+
+    .message-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-family: sans-serif;
+      font-size: 1.2rem;
+      text-align: center;
+      z-index: 4;
     }
   </style>
 </head>
 <body>
 
   <video id="video" autoplay muted playsinline></video>
-  <img id="overlay" alt="Overlay Image" />
+  <img id="overlay" alt="Overlay" />
   <button id="capture-btn">📷 Capture</button>
-  <input type="range" id="zoom-slider" style="display: none;" />
+  <input type="range" id="zoom-slider" />
   <div class="message-box" id="message">Checking device...</div>
 
   <script>
@@ -94,10 +95,6 @@ title: Camera Overlay
       const captureBtn = document.getElementById('capture-btn');
       const zoomSlider = document.getElementById('zoom-slider');
 
-      video.style.display = 'block';
-      overlay.style.display = 'block';
-
-      // Overlay source from URL parameter
       const params = new URLSearchParams(window.location.search);
       const overlayPath = params.get('overlay');
       if (overlayPath) overlay.src = overlayPath;
@@ -124,7 +121,7 @@ title: Camera Overlay
         })
         .catch(err => {
           console.error('Camera access failed:', err);
-          document.getElementById('message').innerText = "Unable to access camera.\nPlease check permissions or try another device.";
+          document.getElementById('message').innerText = "Unable to access camera.\nCheck permissions or try another device.";
           document.getElementById('message').style.display = 'block';
         });
 
@@ -136,22 +133,19 @@ title: Camera Overlay
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        if (overlay.src) {
-          const overlayImg = new Image();
-          overlayImg.src = overlay.src;
-          overlayImg.onload = () => {
-            ctx.drawImage(overlayImg, 0, 0, canvas.width, canvas.height);
-
-            const link = document.createElement('a');
-            link.download = 'tryon-photo.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-          };
-        }
+        const overlayImg = new Image();
+        overlayImg.src = overlay.src;
+        overlayImg.onload = () => {
+          ctx.drawImage(overlayImg, 0, 0, canvas.width, canvas.height);
+          const link = document.createElement('a');
+          link.download = 'tryon-photo.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        };
       });
 
     } else {
-      document.getElementById('message').innerText = "⚠️ Please use a mobile device to access this feature.";
+      document.getElementById('message').innerText = "⚠️ Please view this page on a mobile device.";
       document.getElementById('capture-btn').style.display = 'none';
       document.getElementById('zoom-slider').style.display = 'none';
     }
