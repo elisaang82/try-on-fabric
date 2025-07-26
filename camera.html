@@ -2,195 +2,163 @@
 layout: null
 title: Camera Overlay
 ---
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ page.title }}</title>
+  <title>Try On Fabric - Camera</title>
   <style>
-    html,
     body {
       margin: 0;
-      padding: 0;
+      touch-action: none;
+      font-family: sans-serif;
+      background: black;
+    }
+
+    .camera-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100vh;
       overflow: hidden;
-      background-color: #000;
-      height: 100%;
     }
 
     #video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      z-index: 1;
     }
 
     #overlay {
       position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 100vw;
-      height: auto;
-      object-fit: contain;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
-      z-index: 2;
+      z-index: 10;
     }
 
-    #capture-btn {
+    .controls, .capture-button {
       position: absolute;
-      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 3;
-      padding: 0.8rem 1.2rem;
-      font-size: 1rem;
-      background-color: #f48fb1;
+      z-index: 20;
+    }
+
+    .controls {
+      bottom: 10px;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 8px 12px;
+      border-radius: 12px;
+    }
+
+    .capture-button {
+      bottom: 70px;
+      background: #ff69b4;
       color: white;
       border: none;
-      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 50px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
       cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
 
-    #zoom-slider {
-      position: absolute;
-      bottom: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 3;
-      width: 80vw;
-      accent-color: #f48fb1;
+    #canvas {
       display: none;
-    }
-
-    .message-box {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-family: sans-serif;
-      font-size: 1.2rem;
-      text-align: center;
-      z-index: 4;
     }
   </style>
 </head>
-
 <body>
-
-  <video id="video" autoplay muted playsinline></video>
-  <img id="overlay" alt="Overlay" />
-  <button id="capture-btn">📷 Capture</button>
-  <input type="range" id="zoom-slider" />
-  <div class="message-box" id="message">Checking device...</div>
+  <div class="camera-wrapper">
+    <video id="video" autoplay playsinline></video>
+    <img id="overlay" src="overlay.png" alt="camera overlay">
+    <input type="range" id="zoomSlider" class="controls" min="1" max="3" step="0.1" value="1">
+    <button id="captureBtn" class="capture-button">📷 Save Look</button>
+    <canvas id="canvas"></canvas>
+  </div>
 
   <script>
-    function isMobileDevice() {
-      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    }
+    const video = document.getElementById('video');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const captureBtn = document.getElementById('captureBtn');
+    const canvas = document.getElementById('canvas');
+    const overlay = document.getElementById('overlay');
 
-    if (isMobileDevice()) {
-      document.getElementById('message').style.display = 'none';
+    let stream, track, capabilities;
+    let initialDistance = null;
+    let lastZoom = null;
 
-      const video = document.getElementById('video');
-      const overlay = document.getElementById('overlay');
-      const captureBtn = document.getElementById('capture-btn');
-      const zoomSlider = document.getElementById('zoom-slider');
-
-      const params = new URLSearchParams(window.location.search);
-      const overlayPath = params.get('overlay');
-      if (overlayPath) overlay.src = overlayPath;
-
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-        .then(stream => {
-          video.srcObject = stream;
-
-          const [track] = stream.getVideoTracks();
-          const capabilities = track.getCapabilities();
-          const settings = track.getSettings();
-
-          if (capabilities.zoom) {
-            zoomSlider.style.display = 'block';
-            zoomSlider.min = capabilities.zoom.min;
-            zoomSlider.max = capabilities.zoom.max;
-            zoomSlider.step = capabilities.zoom.step || 0.1;
-            zoomSlider.value = settings.zoom || capabilities.zoom.min;
-
-            zoomSlider.addEventListener('input', () => {
-              track.applyConstraints({ advanced: [{ zoom: parseFloat(zoomSlider.value) }] });
-            });
-          }
-        })
-        .catch(err => {
-          console.error('Camera access failed:', err);
-          document.getElementById('message').innerText = "Unable to access camera.\nCheck permissions or try another device.";
-          document.getElementById('message').style.display = 'block';
-        });
-
-      let initialDistance = null;
-      let lastZoom = null;
-
-      video.addEventListener('touchstart', e => {
-        if (e.touches.length === 2) {
-          initialDistance = getDistance(e.touches[0], e.touches[1]);
-          if (track.getSettings().zoom) {
-            lastZoom = track.getSettings().zoom;
-          }
-        }
-      }, { passive: true });
-
-      video.addEventListener('touchmove', e => {
-        if (e.touches.length === 2 && initialDistance && capabilities.zoom) {
-          const currentDistance = getDistance(e.touches[0], e.touches[1]);
-          const delta = currentDistance - initialDistance;
-          const zoomChange = delta / 100; // sensitivity
-
-          let newZoom = Math.max(capabilities.zoom.min,
-            Math.min(capabilities.zoom.max, lastZoom + zoomChange));
-
-          track.applyConstraints({ advanced: [{ zoom: newZoom }] });
-        }
-      }, { passive: true });
-
-      function getDistance(touch1, touch2) {
-        const dx = touch2.clientX - touch1.clientX;
-        const dy = touch2.clientY - touch1.clientY;
-        return Math.sqrt(dx * dx + dy * dy);
-      }
-      
-      captureBtn.addEventListener('click', () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const overlayImg = new Image();
-        overlayImg.src = overlay.src;
-        overlayImg.onload = () => {
-          ctx.drawImage(overlayImg, 0, 0, canvas.width, canvas.height);
-          const link = document.createElement('a');
-          link.download = 'tryon-photo.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        };
+    async function setupCamera() {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
       });
+      video.srcObject = stream;
+      track = stream.getVideoTracks()[0];
+      capabilities = track.getCapabilities();
 
-    } else {
-      document.getElementById('message').innerText = "⚠️ Please view this page on a mobile device.";
-      document.getElementById('capture-btn').style.display = 'none';
-      document.getElementById('zoom-slider').style.display = 'none';
+      if (capabilities.zoom) {
+        zoomSlider.min = capabilities.zoom.min;
+        zoomSlider.max = capabilities.zoom.max;
+        zoomSlider.step = 0.1;
+        zoomSlider.value = track.getSettings().zoom || capabilities.zoom.min;
+      } else {
+        zoomSlider.style.display = 'none';
+      }
     }
+
+    zoomSlider.addEventListener('input', () => {
+      const zoomValue = parseFloat(zoomSlider.value);
+      track.applyConstraints({ advanced: [{ zoom: zoomValue }] });
+    });
+
+    video.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        initialDistance = getDistance(e.touches[0], e.touches[1]);
+        lastZoom = track.getSettings().zoom || capabilities.zoom.min;
+      }
+    }, { passive: true });
+
+    video.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && initialDistance && capabilities.zoom) {
+        const currentDistance = getDistance(e.touches[0], e.touches[1]);
+        const delta = currentDistance - initialDistance;
+        const zoomChange = delta / 100;
+        let newZoom = Math.max(capabilities.zoom.min,
+                      Math.min(capabilities.zoom.max, lastZoom + zoomChange));
+        track.applyConstraints({ advanced: [{ zoom: newZoom }] });
+        zoomSlider.value = newZoom;
+      }
+    }, { passive: true });
+
+    function getDistance(t1, t2) {
+      const dx = t2.clientX - t1.clientX;
+      const dy = t2.clientY - t1.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    captureBtn.addEventListener('click', () => {
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, width, height);
+      ctx.drawImage(overlay, 0, 0, width, height);
+
+      canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'try-on-fabric.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, 'image/jpeg', 0.95);
+    });
+
+    setupCamera();
   </script>
-
 </body>
-
 </html>
