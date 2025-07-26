@@ -5,12 +5,14 @@ title: Camera Overlay
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ page.title }}</title>
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       overflow: hidden;
@@ -18,17 +20,22 @@ title: Camera Overlay
       height: 100%;
     }
 
-    #video, #overlay {
+    #video {
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      object-fit: contain;
+      object-fit: cover;
       z-index: 1;
     }
 
     #overlay {
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100vw;
+      height: auto;
+      object-fit: contain;
       pointer-events: none;
       z-index: 2;
     }
@@ -47,7 +54,7 @@ title: Camera Overlay
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
 
     #zoom-slider {
@@ -74,6 +81,7 @@ title: Camera Overlay
     }
   </style>
 </head>
+
 <body>
 
   <video id="video" autoplay muted playsinline></video>
@@ -152,4 +160,5 @@ title: Camera Overlay
   </script>
 
 </body>
+
 </html>
